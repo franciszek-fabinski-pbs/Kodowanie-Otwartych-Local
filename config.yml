@@ -1,29 +1,6 @@
 device: cuda
 # model: models/Llama-3.1-8B-Instruct
 model: models/multilingual-e5-large
-max_new_tokens: 1000
-system_prompt: 
-  role: system
-  # content: >
-  #   A survey in Poland was commissioned to find out the opinions of Poles.
-  #   What did you dislike most about this Picnic?
-  #   The answers are written in informal Polish and may contain typos. Your task is to understand each answer and assign it a category
-  #   (or categories) from the predefined list of categories. If an answer fits more than one category, assign all the appropriate category identifiers,
-  #   separating them with an ampersand (&) sign. After categorizing the responses, send the results in the following format: `response_id,category_id`
-  #   (skip the headers and return only the data). Here is the list of categories:
-  # role: system
-  # content: >
-  #   Odpowiadaj krotko i po polsku, uzywaj jezyka neutralnego.
-  content: >
-    W Polsce zostalo przeprowadzone badanie aby poznac opinie Polakow.
-    Z czego jest Pan/i zadowolony/a w pracy w Ministerstwie Finansow?
-    Odpowiedzi zapisane sa w nieformalnym jezyku polskim, moga one zawierac bledy. Twoim zadaniem jest zrozumienie kazdej z odpowiedzi i 
-    przypisanie jej do kategorii (lub do kilku kategorii) z zapisanej listy. Jesli odpowiedz pasuje do wiecej niz jednej kategorii, zapisz wszystkie 
-    pasujace kategorie i podziel je znakiem &, jednak nie zdarza sie to czesto - przewaznie kategorie pasuja pojedynczo.
-    Po kategoryzacji odpisz w formacie: odpowiedz_id,kategoria_id   gdzie kategoria_id to id kategorii.
-    Pomin naglowki i wyslij tylko dane. Oto lista kategorii:
-
-
 
 categories:
   - id: 1
