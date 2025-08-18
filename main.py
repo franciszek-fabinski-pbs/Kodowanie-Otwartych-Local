@@ -8,10 +8,11 @@ def main():
     with open("config.yml", "r") as config_file:
         config = yaml.load(config_file, Loader=yaml.SafeLoader)
 
-    categories = config["categories"]
+    # categories = config["categories"]
     manager = ModelManager(config)
-    manager.generate_system_prompt(categories)
-    manager.prompt_model("1574 - ...")
+    # manager.generate_system_prompt(categories)
+
+    manager.prompt_model("...")
 
 
 if __name__ == "__main__":
