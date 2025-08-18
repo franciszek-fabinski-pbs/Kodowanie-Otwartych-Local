@@ -12,9 +12,10 @@ def main():
     manager = ModelManager(config)
     # manager.generate_system_prompt(categories)
     manager.categories = manager.generate_categories(config["categories"])
-    print(type(manager.categories))
-    # print(manager.categories[torch.argmax(manager.prompt_model("..."))])
-    print(manager.prompt_model("..."))
+    print(manager.categories)
+    # print(manager.prompt_model("przyjazna atmosfera").shape)
+    # print(manager.categories[torch.argmax(manager.prompt_model("bulka"))])
+    print(manager.categories[manager.prompt_model("query: ok")])
 
 
 if __name__ == "__main__":
