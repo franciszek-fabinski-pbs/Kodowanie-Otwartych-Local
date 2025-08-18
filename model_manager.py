@@ -18,10 +18,7 @@ class ModelManager:
         """
         model_name = config["model"]
         self.model = SentenceTransformer(model_name)
-        self.system_prompt = config["system_prompt"]
-        self.messages = [config["system_prompt"]]
         self.device = config["device"]
-        self.max_new_tokens = config["max_new_tokens"]
         self.categories = None
 
         self.model.to(self.device)
