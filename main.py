@@ -11,8 +11,10 @@ def main():
     # categories = config["categories"]
     manager = ModelManager(config)
     # manager.generate_system_prompt(categories)
-
-    manager.prompt_model("...")
+    manager.categories = manager.generate_categories(config["categories"])
+    print(type(manager.categories))
+    # print(manager.categories[torch.argmax(manager.prompt_model("..."))])
+    print(manager.prompt_model("..."))
 
 
 if __name__ == "__main__":
