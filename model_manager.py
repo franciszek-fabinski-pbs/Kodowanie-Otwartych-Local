@@ -20,6 +20,7 @@ class ModelManager:
         self.model = SentenceTransformer(model_name)
         self.device = config["device"]
         self.categories = None
+        self.category_embeddings = None
 
         self.model.to(self.device)
 
@@ -33,18 +34,43 @@ class ModelManager:
         prompt_embedding = self.model.encode(
             [prompt], convert_to_tensor=True, normalize_embeddings=True
         )
-        category_embeddings = self.model.encode(
-            self.categories, convert_to_tensor=True, normalize_embeddings=True
-        )
 
-        sims = util.cos_sim(prompt_embedding, category_embeddings).squeeze(0)
+        sims = util.cos_sim(prompt_embedding, self.category_embeddings).squeeze(0)
         print(sims)
         best_idx = int(torch.argmax(sims))
 
         return best_idx
 
-    @staticmethod
-    def generate_categories(categories: list[dict]) -> list[str]:
+    def prompt_model_multi(
+        self,
+        prompt: str,
+        top_k: int,
+        threshold: float | None = 0.35,
+        margin: float | None = 0.02,
+    ) -> list[int]:
+        prompt = "query: " + prompt
+        prompt_embedding = self.model.encode(
+            [prompt], convert_to_tensor=True, normalize_embeddings=True
+        )
+        sims = util.cos_sim(prompt_embedding, self.category_embeddings).squeeze(0)
+        k = min(top_k, sims.size(0))
+        top_vals, top_idx = torch.topk(sims, k=k)
+        best = top_vals[0].item()
+
+        picked = []
+        for score, idx in zip(top_vals.tolist(), top_idx.tolist()):
+            ok_threshold = threshold is not None and score >= threshold
+            ok_margin = margin is not None and score >= best - margin
+            if (threshold is None and margin is None) or ok_threshold or ok_margin:
+                picked.append((idx, score))
+        if not picked:
+            picked = [(int(top_idx[0]), float(top_vals[0]))]
+
+        return [
+            (self.categories[i].removeprefix("passage: ").strip(), s) for i, s in picked
+        ]
+
+    def generate_categories(self, categories: list[dict]) -> None:
         """
         Generate a list of category names without ids from dict list and format
         it for the model.
@@ -53,4 +79,12 @@ class ModelManager:
         for cat in categories:
             name = cat["name"]
             result.append("passage: " + name)
-        return result
+        self.categories = result
+        self.category_embeddings = self.model.encode(
+            self.categories, convert_to_tensor=True, normalize_embeddings=True
+        )
+
+    def train_for_garbage_detection(self, data: list[dict]) -> None:
+        return
+
+
