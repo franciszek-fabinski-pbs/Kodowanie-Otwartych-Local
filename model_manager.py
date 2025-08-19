@@ -16,11 +16,12 @@ class ModelManager:
                 id: id of the category
                 name: name of the category
         """
-        model_name = config["model"]
+        model_name: str = config["model"]
         self.model = SentenceTransformer(model_name)
-        self.device = config["device"]
-        self.categories = None
-        self.category_embeddings = None
+        self.device: torch.device | str = config["device"]
+        self.categories_meta: list[dict] = None
+        self.categories_names: list[str] = None
+        self.category_embeddings: torch.Tensor = None
 
         self.model.to(self.device)
 
@@ -67,24 +68,24 @@ class ModelManager:
             picked = [(int(top_idx[0]), float(top_vals[0]))]
 
         return [
-            (self.categories[i].removeprefix("passage: ").strip(), s) for i, s in picked
+            (self.categories_names[i].removeprefix("passage: ").strip(), s)
+            for i, s in picked
         ]
 
-    def generate_categories(self, categories: list[dict]) -> None:
+    def pull_categories(self, categories: list[dict]) -> None:
         """
         Generate a list of category names without ids from dict list and format
         it for the model.
         """
         result = []
+        self.categories_meta = categories
         for cat in categories:
             name = cat["name"]
             result.append("passage: " + name)
-        self.categories = result
+        self.categories_names = result
         self.category_embeddings = self.model.encode(
-            self.categories, convert_to_tensor=True, normalize_embeddings=True
+            self.categories_names, convert_to_tensor=True, normalize_embeddings=True
         )
 
     def train_for_garbage_detection(self, data: list[dict]) -> None:
         return
-
-
