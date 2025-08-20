@@ -11,12 +11,12 @@ def main():
 
     manager = ModelManager(config)
 
-    with open("categories.json", "r") as categories_file:
+    with open("data/categories.json", "r") as categories_file:
         categories = json.load(categories_file)
         categories = categories["categories"]
     manager.pull_categories(categories)
     prompts = None
-    with open("prompts.json", "r") as prompts_file:
+    with open("data/prompts.json", "r") as prompts_file:
         prompts = json.load(prompts_file)
         prompts = prompts["answers"]
     results = []

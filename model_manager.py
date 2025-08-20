@@ -33,7 +33,7 @@ class ModelManager:
         Returns index of the most fitting category.
         """
         prompt = prompt.lower()
-        prompt = "query: " + prompt
+        # prompt = "query: " + prompt
         prompt_embedding = self.model.encode(
             [prompt], convert_to_tensor=True, normalize_embeddings=True
         )
@@ -50,7 +50,7 @@ class ModelManager:
         threshold: float | None = 0.35,
         margin: float | None = 0.02,
     ) -> list[int]:
-        prompt = "query: " + prompt
+        # prompt = "query: " + prompt
         prompt_embedding = self.model.encode(
             [prompt], convert_to_tensor=True, normalize_embeddings=True
         )
@@ -72,15 +72,16 @@ class ModelManager:
         if not picked:
             picked = [(int(top_idx[0]), float(top_vals[0]))]
 
-        sims_norm = sorted(sims_norm, key=lambda s: s.item(), reverse=True)
-        sims = sorted(sims, key=lambda s: s.item(), reverse=True)
+        order = torch.argsort(sims, descending=True)
+        sims_norm = sims_norm[order]
+        sims = sims[order]
         return [
             (
                 self.categories_names[i].removeprefix("passage: ").strip(),
                 s.item(),
                 s_norm.item(),
             )
-            for (i, s), s_norm in zip(enumerate(sims), sims_norm)
+            for i, s, s_norm in zip(order.tolist(), sims, sims_norm)
         ]
 
     def pull_categories(self, categories: list[dict]) -> None:
@@ -92,7 +93,8 @@ class ModelManager:
         self.categories_meta = categories
         for cat in categories:
             name = cat["name"].lower()
-            result.append("passage: " + name)
+            # result.append("passage: " + name)
+            result.append(name)
         self.categories_names = result
         self.category_embeddings = self.model.encode(
             self.categories_names, convert_to_tensor=True, normalize_embeddings=True
