@@ -17,9 +17,15 @@ def main():
         prompts = prompts["answers"]
     results = []
     for prompt in prompts:
-        result = manager.prompt_model_multi(prompt, top_k=3, threshold=0.15)
+        result = manager.prompt_model_multi(
+            prompt, top_k=20, threshold=0.0000, margin=0.0000
+        )
         results.append(result)
-        print(f"{prompt} ---> {result}")
+        print("-" * 40)
+        print(f"{prompt}, entropia: {manager.calculate_entropy(prompt)}:")
+        print("-" * 10)
+        for idx, (cat, score, score_norm) in enumerate(result, start=1):
+            print(f"\t{idx:<4}: {cat:<55} {score:>18.16f} {score_norm:>18.16f}")
 
 
 if __name__ == "__main__":
