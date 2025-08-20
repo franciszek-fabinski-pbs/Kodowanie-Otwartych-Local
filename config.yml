@@ -2,62 +2,9 @@ device: cuda
 # model: models/Llama-3.1-8B-Instruct
 model: models/multilingual-e5-large
 
-categories:
-  - id: 1
-    name: Możliwość pracy w trybie hybrydowym/zdalnym
-  - id: 2
-    name: Bezpieczne, stabilne zatrudnienie
-  - id: 3
-    name: Życzliwa i przyjazna atmosfera
-  - id: 4
-    name: Współpracownicy/Współpraca
-  - id: 5
-    name: Ciekawe zadania/zakres wykonywanej pracy
-  - id: 6
-    name: Mozliwość rozwoju, szkolenia
-  - id: 7
-    name: Elastyczne godziny pracy
-  - id: 8
-    name: Przełożeni
-  - id: 9
-    name: Rozwojowe i ambitne zadania
-  - id: 10
-    name: Benefity, działania/wydarzenia propracownicze
-  - id: 11
-    name: Wynagrodzenie, nagrody, premie
-  - id: 12
-    name: Prestiżowy, społeczny lub patriotyczny charakter pracy
-  - id: 13
-    name: Lokalizacja
-  - id: 14
-    name: Funkcjonalność/warunki miejsca pracy
-  - id: 15
-    name: Wszystko / ogólnie pozytywna ocena pracy
-  - id: 16
-    name: Warunki pracy
-  - id: 17
-    name: Work-life balance, optymalne obciążenie pracą
-  - id: 18
-    name: Komunikacja
-  - id: 19
-    name: Parking
-  - id: 20
-    name: Biblioteka
-  - id: 21
-    name: Organizacja pracy
-  - id: 22
-    name: Terminowe wynagrodzenie
-  - id: 23
-    name: Satysfakcja z wykonywanej pracy
-  - id: 24
-    name: Samodzielność wykonywania zadań
-  - id: 25
-    name: Inne
-  - id: 26
-    name: Brak ogólnego zadowolenia
-  - id: 27
-    name: Udogodnienia gastronomiczno-spożywcze 
-  - id: 28
-    name: Udogodnienia dla rowerzystów
-  - id: 99
-    name: Brak odpowiedzi
+classification:
+  top_k: 5
+  threshold: 0.0
+  margin: 0.025
+
+

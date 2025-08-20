@@ -10,6 +10,7 @@ def main():
         config = yaml.load(config_file, Loader=yaml.SafeLoader)
 
     manager = ModelManager(config)
+
     with open("categories.json", "r") as categories_file:
         categories = json.load(categories_file)
         categories = categories["categories"]
@@ -19,10 +20,9 @@ def main():
         prompts = json.load(prompts_file)
         prompts = prompts["answers"]
     results = []
+
     for prompt in prompts:
-        result = manager.prompt_model_multi(
-            prompt, top_k=20, threshold=0.0000, margin=0.0000
-        )
+        result = manager.prompt_model_multi(prompt, **config["classification"])
         results.append(result)
         print("-" * 40)
         print(f"{prompt}, entropia: {manager.calculate_entropy(prompt)}:")

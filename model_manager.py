@@ -46,7 +46,7 @@ class ModelManager:
     def prompt_model_multi(
         self,
         prompt: str,
-        top_k: int,
+        top_k: int = 3,
         threshold: float | None = 0.35,
         margin: float | None = 0.02,
     ) -> list[int]:
