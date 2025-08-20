@@ -10,7 +10,10 @@ def main():
         config = yaml.load(config_file, Loader=yaml.SafeLoader)
 
     manager = ModelManager(config)
-    manager.pull_categories(config["categories"])
+    with open("categories.json", "r") as categories_file:
+        categories = json.load(categories_file)
+        categories = categories["categories"]
+    manager.pull_categories(categories)
     prompts = None
     with open("prompts.json", "r") as prompts_file:
         prompts = json.load(prompts_file)
