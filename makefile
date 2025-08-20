@@ -7,3 +7,7 @@ run: link
 link:
 	@echo "Linking local models to the project..."
 	@ln -sf ~/Modele/* models/
+
+log:
+	@echo "Showing latest log file..."
+	@ls -1 logs | sort | tail -n1 | xargs -I{} less logs/{}
