@@ -14,16 +14,27 @@ def main():
     with open("data/categories.json", "r") as categories_file:
         categories = json.load(categories_file)
         categories = categories["categories"]
+        print(f"ilosc kat: {len(categories)}")
     manager.pull_categories(categories)
     prompts = None
     with open("data/prompts.json", "r") as prompts_file:
         prompts = json.load(prompts_file)
         prompts = prompts["answers"]
-    results = []
+    # results = []
+    #
+    # for prompt in prompts:
+    #     result = manager.prompt_model_multi(prompt, **config["classification"])
+    #     results.append(result)
+    #     print("-" * 40)
+    #     print(f"{prompt}, entropia: {manager.calculate_entropy(prompt)}:")
+    #     print("-" * 10)
+    #     for idx, (cat, score, score_norm) in enumerate(result, start=1):
+    #         print(f"\t{idx:<4}: {cat:<55} {score:>18.16f} {score_norm:>18.16f}")
 
-    for prompt in prompts:
-        result = manager.prompt_model_multi(prompt, **config["classification"])
-        results.append(result)
+    results = manager.prompt_model_multi_batch(prompts, **config["classification"])
+
+    for idx, result in enumerate(results):
+        prompt = prompts[idx]
         print("-" * 40)
         print(f"{prompt}, entropia: {manager.calculate_entropy(prompt)}:")
         print("-" * 10)
