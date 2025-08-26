@@ -23,6 +23,8 @@ class ModelManager:
         self.categories_meta: list[dict] = None
         self.categories_names: list[str] = None
         self.category_embeddings: torch.Tensor = None
+        self.prompt_embeddings: torch.Tensor = None
+        self.sim_results = None
 
         self.model.to(self.device)
 
@@ -90,10 +92,12 @@ class ModelManager:
     def prompt_model_multi_batch(
         self,
         prompts: list[str],
-        threshold: float = 0.35,
-        margin: float = 0.02,
-        top_k: int = 3,
+        threshold: float | None = 0.35,
+        margin: float | None = 0.02,
+        top_k: int | None = None,
         batch_size: int = 32,
+        min_similiarity: float | None = 0.857,
+        show_all_sims: bool = False,
     ):
         q_prompts = [f"query: {p}" for p in prompts]
 
@@ -103,32 +107,52 @@ class ModelManager:
             normalize_embeddings=True,
             batch_size=batch_size,
         )  # shape: (M, d)
+        self.prompt_embeddings = Q
         S = util.cos_sim(Q, self.category_embeddings)
-        print(f"ilosc kat emb: {len(self.category_embeddings)}")
-        print(f"ilosc kat names: {len(self.categories_names)}")
         result = []
+        print(
+            f"calling prompt with args: threshold-{threshold}, margin-{margin}, min_similiarity-{min_similiarity}"
+        )
         for m in range(S.size(0)):
             row = S[m]
             s_min = row.min().item()
             s_max = row.max().item()
 
             row_norm = (row - s_min) / (s_max - s_min + 1e-9)
-            k = min(top_k, row.size(0))
-            top_vals, top_idx = torch.topk(row, k=k)
-            best = top_vals[0].item()
+            if top_k is not None:
+                k = min(top_k, row.size(0))
+                top_vals, top_idx = torch.topk(row, k=k)
+                best = top_vals[0].item()
+                top_vals = top_vals.tolist()
+                top_idx = top_idx.tolist()
+
+            else:
+                top_idx, top_vals = map(
+                    list,
+                    zip(*sorted(enumerate(row), key=lambda val: val[1], reverse=True)),
+                )
+                best = top_vals[0]
 
             picked = []
-            for score, idx in zip(top_vals.tolist(), top_idx.tolist()):
+            for score, idx in zip(top_vals, top_idx):
                 ok_threshold = threshold is not None and score >= threshold
                 ok_margin = margin is not None and score >= best - margin
-                if (threshold is None and margin is None) or (
-                    ok_threshold and ok_margin
-                ):
+                ok_minimum = min_similiarity is not None and score > min_similiarity
+                if (
+                    threshold is None and margin is None and min_similiarity is not None
+                ) or (ok_threshold and ok_margin and ok_minimum):
                     picked.append((idx, score))
             if not picked:
                 picked = [(int(top_idx[0]), float(top_vals[0]))]
 
-            order = torch.argsort(row, descending=True)
+            if show_all_sims:
+                order = torch.argsort(row, descending=True)
+            else:
+                order = [
+                    res[0]
+                    for res in sorted(picked, key=lambda pick: pick[1], reverse=True)
+                ]
+
             row_norm = row_norm[order]
             row = row[order]
             result.append(
@@ -138,10 +162,11 @@ class ModelManager:
                         s.item(),
                         s_norm.item(),
                     )
-                    for i, s, s_norm in zip(order.tolist(), row, row_norm)
+                    for i, s, s_norm in zip(order, row, row_norm)
                 ]
             )
 
+        self.sim_results = result
         return result
 
     def pull_categories(self, categories: list[dict]) -> None:
@@ -159,6 +184,10 @@ class ModelManager:
         self.category_embeddings = self.model.encode(
             self.categories_names, convert_to_tensor=True, normalize_embeddings=True
         )
+
+    def get_results(self):
+        sims_self = util.cos_sim(self.prompt_embeddings, self.prompt_embeddings)
+        return self.sim_results, sims_self
 
     @staticmethod
     def calculate_entropy(prompt: str):
