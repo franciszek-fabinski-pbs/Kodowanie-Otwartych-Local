@@ -7,7 +7,7 @@ import pandas as pd
 import torch
 
 
-def pretty_print_sim_idx(
+def pretty_print_sim_idx(  # {{{
     names, S, decimals=3, hide_diag=True, start=0, pad=2, show_map=True, maxlen=60
 ):
     """
@@ -51,35 +51,62 @@ def pretty_print_sim_idx(
             print(f"  {idx}  {t}")
 
 
+# }}}
+
+
+def extract_column_from_csv(
+    filename: str, column_idx: int, data_type: type
+) -> pd.DataFrame:
+    df = pd.read_csv(
+        filename, sep=";", header=0, usecols=[column_idx], skip_blank_lines=False
+    )
+    results = df.iloc[:, 0].astype(data_type)
+    return results
+
+
 def main():
     with open("config.yml", "r") as config_file:
         config = yaml.load(config_file, Loader=yaml.SafeLoader)
 
     manager = ModelManager(config)
 
-    with open("data/categories.json", "r") as categories_file:
+    with open("data/2023-kat.json", "r") as categories_file:
         categories = json.load(categories_file)
         categories = categories["categories"]
         print(f"ilosc kat: {len(categories)}")
     manager.pull_categories(categories)
     prompts = None
-    # with open("data/prompts.json", "r") as prompts_file:
-    #     prompts = json.load(prompts_file)
-    #     prompts = prompts["answers"]
 
-    df = pd.read_csv("data/zbior.csv", sep=";", header=None, usecols=[2])  # 3. kolumna
-    prompts = df.iloc[:, 0].astype(str).str.strip().tolist()
+    prompts = extract_column_from_csv(
+        "./data/2023-u8.csv", column_idx=1, data_type=str
+    ).tolist()  # TODO
 
-    manager.prompt_model_multi_batch(prompts, show_all_sims=True, **config["classification"])
+    manager.prompt_model_multi_batch(
+        prompts, show_all_sims=True, **config["classification"]
+    )
     results, self_sim = manager.get_results()
+
+    # for idx, result in enumerate(results):
+    #     prompt = prompts[idx]
+    #     print("-" * 40)
+    #     print(f"{prompt}, entropia: {manager.calculate_entropy(prompt)}:")
+    #     print("-" * 10)
+    #     for idx, (cat_idx, cat, score, score_norm) in enumerate(result, start=1):
+    #         print(f"\t{idx:<4}: {cat:<55} {score:>18.16f} {score_norm:>18.16f}")
+
+    human_classification = extract_column_from_csv(
+        "./data/2023-u8.csv", 2, int
+    ).tolist()
 
     for idx, result in enumerate(results):
         prompt = prompts[idx]
+        ai_classification = result[0][0]
+        hc = human_classification[idx]
         print("-" * 40)
-        print(f"{prompt}, entropia: {manager.calculate_entropy(prompt)}:")
-        print("-" * 10)
-        for idx, (cat, score, score_norm) in enumerate(result, start=1):
-            print(f"\t{idx:<4}: {cat:<55} {score:>18.16f} {score_norm:>18.16f}")
+        print(f"{prompt}:")
+        print(f"Human: {hc}-{categories[hc]}")
+        print(f"AI: {ai_classification}-{categories[ai_classification]}")
+        print("-" * 40)
 
     # pretty_print_sim_idx(prompts, self_sim, decimals=5)
 
