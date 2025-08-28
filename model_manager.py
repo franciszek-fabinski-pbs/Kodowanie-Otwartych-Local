@@ -34,7 +34,7 @@ class ModelManager:
 
         Returns index of the most fitting category.
         """
-        prompt = prompt.lower()
+        prompt = prompt
         # prompt = "query: " + prompt
         prompt_embedding = self.model.encode(
             [prompt], convert_to_tensor=True, normalize_embeddings=True
@@ -44,50 +44,6 @@ class ModelManager:
         best_idx = int(torch.argmax(sims))
 
         return best_idx
-
-    def prompt_model_multi(
-        self,
-        prompt: str,
-        top_k: int = 3,
-        threshold: float | None = 0.35,
-        margin: float | None = 0.02,
-    ) -> list[int]:
-        prompt = "query: " + prompt
-        prompt_embedding = self.model.encode_query(
-            [prompt], convert_to_tensor=True, normalize_embeddings=True
-        )
-        print(f"ilosc kat emb: {len(self.category_embeddings)}")
-        print(f"ilosc kat names: {len(self.categories_names)}")
-
-        sims = util.cos_sim(prompt_embedding, self.category_embeddings).squeeze(0)
-        sims_min = sims.min()
-        sims_max = sims.max()
-
-        sims_norm = (sims - sims_min) / (sims_max - sims_min + 1e-9)
-        k = min(top_k, sims.size(0))
-        top_vals, top_idx = torch.topk(sims, k=k)
-        best = top_vals[0].item()
-
-        picked = []
-        for score, idx in zip(top_vals.tolist(), top_idx.tolist()):
-            ok_threshold = threshold is not None and score >= threshold
-            ok_margin = margin is not None and score >= best - margin
-            if (threshold is None and margin is None) or (ok_threshold and ok_margin):
-                picked.append((idx, score))
-        if not picked:
-            picked = [(int(top_idx[0]), float(top_vals[0]))]
-
-        order = torch.argsort(sims, descending=True)
-        sims_norm = sims_norm[order]
-        sims = sims[order]
-        return [
-            (
-                self.categories_names[i].removeprefix("passage: ").strip(),
-                s.item(),
-                s_norm.item(),
-            )
-            for i, s, s_norm in zip(order.tolist(), sims, sims_norm)
-        ]
 
     def prompt_model_multi_batch(
         self,
@@ -158,6 +114,7 @@ class ModelManager:
             result.append(
                 [
                     (
+                        i,
                         self.categories_names[i].removeprefix("passage: ").strip(),
                         s.item(),
                         s_norm.item(),
@@ -177,12 +134,24 @@ class ModelManager:
         result = []
         self.categories_meta = categories
         for cat in categories:
-            name = cat["name"].lower()
+            name = cat["name"]
             result.append("passage: " + name)
             # result.append(name)
         self.categories_names = result
         self.category_embeddings = self.model.encode(
             self.categories_names, convert_to_tensor=True, normalize_embeddings=True
+        )
+
+    def encode(
+        self, data: list[str], prefix: str | None = None, batch_size: int = 32
+    ) -> torch.Tensor:
+        if prefix is not None:
+            data = [prefix + d for d in data]
+        return self.model.encode(
+            data,
+            convert_to_tensor=True,
+            normalize_embeddings=True,
+            batch_size=batch_size,
         )
 
     def get_results(self):
