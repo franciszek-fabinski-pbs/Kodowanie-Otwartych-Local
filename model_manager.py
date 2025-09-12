@@ -1,4 +1,5 @@
 from sentence_transformers import SentenceTransformer, util
+from data_types import Category
 import torch
 import numpy as np
 
@@ -48,6 +49,8 @@ class ModelManager:
     def prompt_model_multi_batch(
         self,
         prompts: list[str],
+        categories: list[Category],
+        categories_encoded: torch.Tensor,
         threshold: float | None = 0.35,
         margin: float | None = 0.02,
         top_k: int | None = None,
@@ -64,7 +67,7 @@ class ModelManager:
             batch_size=batch_size,
         )  # shape: (M, d)
         self.prompt_embeddings = Q
-        S = util.cos_sim(Q, self.category_embeddings)
+        S = util.cos_sim(Q, categories_encoded)
         result = []
         print(
             f"calling prompt with args: threshold-{threshold}, margin-{margin}, min_similiarity-{min_similiarity}"
@@ -114,7 +117,7 @@ class ModelManager:
             result.append(
                 [
                     (
-                        i,
+                        categories[i].id,
                         self.categories_names[i].removeprefix("passage: ").strip(),
                         s.item(),
                         s_norm.item(),
