@@ -57,8 +57,10 @@ class ModelManager:
         batch_size: int = 32,
         min_similiarity: float | None = 0.857,
         show_all_sims: bool = False,
-    ):
-        q_prompts = [f"query: {p}" for p in prompts]
+        intro: str = "",
+        return_top_n: int | None = None,
+    ) -> list[tuple[int, str, float, float]]:
+        q_prompts = [f"query: {intro} {p}" for p in prompts]
 
         Q = self.model.encode(
             q_prompts,
@@ -67,7 +69,6 @@ class ModelManager:
             batch_size=batch_size,
         )  # shape: (M, d)
         self.prompt_embeddings = Q
-
 
         S = util.cos_sim(Q, categories_encoded)
         result = []
@@ -116,17 +117,20 @@ class ModelManager:
 
             row_norm = row_norm[order]
             row = row[order]
-            result.append(
-                [
-                    (
-                        categories[i].id,
-                        self.categories_names[i].removeprefix("passage: ").strip(),
-                        s.item(),
-                        s_norm.item(),
-                    )
-                    for i, s, s_norm in zip(order, row, row_norm)
-                ]
-            )
+            row_list = [
+                (
+                    categories[i].id,
+                    self.categories_names[i].removeprefix("passage: ").strip(),
+                    s.item(),
+                    s_norm.item(),
+                )
+                for i, s, s_norm in zip(order, row, row_norm)
+            ]
+
+            if return_top_n is not None:
+                row_list = row_list[: max(0, min(return_top_n, len(row_list)))]
+
+            result.append(row_list)
 
         self.sim_results = result
         return result

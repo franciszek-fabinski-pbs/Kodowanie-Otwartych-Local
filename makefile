@@ -15,3 +15,7 @@ link:
 log:
 	@echo "Showing latest log file..."
 	@ls -1 logs | sort | tail -n1 | xargs -I{} less logs/{}
+
+push:
+	@echo "pushing project to server..."
+	@rsync -avz --exclude='.venv'  ../kodowanie-otwartych-local pbs@tyfus.pbs.local:~/

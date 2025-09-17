@@ -3,7 +3,7 @@ device: cuda
 model: models/multilingual-e5-large
 
 classification:
-  # top_k: 5
+  top_k: 5
   threshold: 0.003
   margin: 0.025
   min_similiarity: 0.857
