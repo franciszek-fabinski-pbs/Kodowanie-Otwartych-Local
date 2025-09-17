@@ -12,43 +12,43 @@ from data_manager import CategoryManager
 from model_manager import ModelManager
 
 
-def pretty_print_sim_idx(  # {{{
+def pretty_print_sim_idx(
     names, S, decimals=3, hide_diag=True, start=0, pad=2, show_map=True, maxlen=60
 ):
     """
-    names  : lista pełnych nazw kategorii (np. ["passage: ...", ...])
-    S      : macierz podobieństw (NxN) - torch.Tensor lub np.ndarray
+    names  : list of categories full names (np. ["passage: ...", ...])
+    S      : similiarity matrix (NxN) - torch.Tensor or np.ndarray
     decimals: liczba miejsc po przecinku
-    hide_diag: zamień diagonalę na '—' dla czytelności
-    start  : od jakiego indeksu numerować (np. 0 lub 1)
-    pad    : ile cyfr w indeksie (np. 2 -> 00, 01, 02)
-    show_map: czy wydrukować mapowanie indeks -> nazwa
-    maxlen : maks. długość wiersza w mapowaniu (tylko do wydruku)
+    hide_diag: replace diagonal by '—' for easier reading
+    start  : indexing starting index
+    pad    : number of digits in the index (e.g. 2 -> 00, 01, 02)
+    show_map: whether to print index -> name mapping
+    maxlen : max. row length in mapping (print only)
     """
-    # 1) oczyść nazwy (opcjonalnie usuń "passage: ")
+    # 1) clean out category names
     clean = [n.removeprefix("passage: ").strip() for n in names]
 
-    # 2) przygotuj macierz jako numpy
+    # 2) prepare the matrix for numpy
     if isinstance(S, torch.Tensor):
         S = S.detach().cpu().numpy()
     S = np.asarray(S)
 
-    # 3) etykiety = same indeksy
+    # 3) labels = index only
     labels = [f"{i + start:0{pad}d}" for i in range(len(clean))]
 
     # 4) DataFrame
     df = pd.DataFrame(S, index=labels, columns=labels)
 
-    # 5) schowaj diagonalę (ładniejszy podgląd)
+    # 5) hide diagonal (better readability)
     if hide_diag:
         np.fill_diagonal(df.values, np.nan)
 
-    # 6) wydruk tabeli
+    # 6) print out the table
     print(
         df.to_string(float_format=lambda x: f"{x:.{decimals}f}" if pd.notna(x) else "—")
     )
 
-    # 7) opcjonalne mapowanie indeks → pełna nazwa
+    # 7) optional: index → full name mapping
     if show_map:
         print("\nMapowanie indeksów:")
         for idx, name in zip(labels, clean):
@@ -56,12 +56,12 @@ def pretty_print_sim_idx(  # {{{
             print(f"  {idx}  {t}")
 
 
-# }}}
-
-
 def extract_column_from_csv(
     filename: str, column_idx: int, data_type: type
 ) -> pd.DataFrame:
+    """
+    extracting a single @filename.csv column at index @column_idx as @data_type
+    """
     df = pd.read_csv(
         filename, sep=";", header=0, usecols=[column_idx], skip_blank_lines=False
     )
@@ -79,22 +79,23 @@ def extract_columns(
     return_numpy: bool = False,
 ):
     """
-    Wczytuje wskazane kolumny z CSV.
-    - columns: lista/zbiór indeksów, slice (np. slice(3, None, 2)), albo range.
-               Jeśli None -> wszystkie kolumny.
-    - dtype: pojedynczy typ (np. float) lub słownik {kolumna: typ}.
-             Działa jak DataFrame.astype(...).
-    - return_numpy: True -> zwróci macierz (ndarray), False -> DataFrame.
+    Reads selected columns from CSV file.
+    - columns: index list/set, slice (e.g. slice(3, None, 2)) or range.
+               if None -> all columns.
+    - dtype: single type (e.g. float) or dictionary {column: type}.
+             works like DataFrame.astype(...).
+    - return_numpy: True -> returns (np.ndarray), False -> pd.DataFrame.
     """
-    # Jeśli columns to slice bez stopu, potrzebujemy znać liczbę kolumn:
+    # if columns is a slice with no .stop set,
+    # we need to know the number of columns
     if isinstance(columns, slice) and columns.stop is None:
         header_only = pd.read_csv(filename, sep=sep, header=header, nrows=0)
         ncols = header_only.shape[1]
         usecols = list(range(columns.start or 0, ncols, columns.step or 1))
     elif isinstance(columns, (range, list, tuple, set)):
-        usecols = list(columns)  # pandas wymaga listy/tupli
+        usecols = list(columns)  # pandas requires list/tuple
     else:
-        usecols = columns  # None lub pełny slice z .stop zdefiniowanym
+        usecols = columns  # None or full slice with set .stop
 
     df = pd.read_csv(
         filename,
@@ -110,7 +111,7 @@ def extract_columns(
     return df.to_numpy() if return_numpy else df
 
 
-def optimize_classification_params(  # {{{
+def optimize_classification_params(
     model_manager: ModelManager,
     cat_manager: CategoryManager,
     prompts: list[str],
@@ -186,8 +187,8 @@ def optimize_classification_params(  # {{{
     subset_n = (
         min(len(prompts), 512) if subset_n is None else min(len(prompts), subset_n)
     )
-    lr_t, lr_m, lr_s = 0.008, 0.003, 0.01
-    eps = 1e-2
+    lr_t, lr_m, lr_s = 0.008, 0.002, 0.01
+    eps = 1e-1
 
     best_t, best_m, best_s = t, m, s
     best_loss = compute_loss(best_t, best_m, best_s, use_n=subset_n)
@@ -240,9 +241,6 @@ def optimize_classification_params(  # {{{
     final_loss = compute_loss(best_t, best_m, best_s, use_n=None)
     print(f"[opt] final full loss={final_loss:.6f}")
     return best_t, best_m, best_s, best_loss, final_loss
-
-
-# }}}
 
 
 def main():
@@ -346,5 +344,5 @@ def main():
 
 
 if __name__ == "__main__":
-    torch.cuda.empty_cache()
+    # torch.cuda.empty_cache()
     main()
