@@ -1,7 +1,9 @@
-from sentence_transformers import SentenceTransformer, util
-from data_types import Category
-import torch
 import numpy as np
+import torch
+from sentence_transformers import SentenceTransformer
+from sentence_transformers import util
+
+from data_types import Category
 
 
 class ModelManager:
@@ -56,9 +58,12 @@ class ModelManager:
         top_k: int | None = None,
         batch_size: int = 32,
         min_similiarity: float | None = 0.857,
+        min_local_similiarity: float | None = 0.85,
         show_all_sims: bool = False,
-    ):
-        q_prompts = [f"query: {p}" for p in prompts]
+        intro: str = "",
+        return_top_n: int | None = None,
+    ) -> list[tuple[int, str, float, float]]:
+        q_prompts = [f"query: {intro} {p}" for p in prompts]
 
         Q = self.model.encode(
             q_prompts,
@@ -67,7 +72,6 @@ class ModelManager:
             batch_size=batch_size,
         )  # shape: (M, d)
         self.prompt_embeddings = Q
-
 
         S = util.cos_sim(Q, categories_encoded)
         result = []
@@ -80,58 +84,65 @@ class ModelManager:
             s_max = row.max().item()
 
             row_norm = (row - s_min) / (s_max - s_min + 1e-9)
-            if top_k is not None:
-                k = min(top_k, row.size(0))
-                top_vals, top_idx = torch.topk(row, k=k)
-                best = top_vals[0].item()
-                top_vals = top_vals.tolist()
-                top_idx = top_idx.tolist()
+            # Sort all categories by score descending
+            top_idx, top_vals = map(
+                list,
+                zip(*sorted(enumerate(row), key=lambda val: val[1], reverse=True)),
+            )
+            top_norm = row_norm[top_idx]
+            best = float(top_vals[0])
 
-            else:
-                top_idx, top_vals = map(
-                    list,
-                    zip(*sorted(enumerate(row), key=lambda val: val[1], reverse=True)),
-                )
-                best = top_vals[0]
-
+            # Apply threshold-based selection when top_k is None
             picked = []
-            for score, idx in zip(top_vals, top_idx):
-                ok_threshold = threshold is not None and score >= threshold
-                ok_margin = margin is not None and score >= best - margin
-                ok_minimum = min_similiarity is not None and score > min_similiarity
-                if (
-                    threshold is None and margin is None and min_similiarity is not None
-                ) or (ok_threshold and ok_margin and ok_minimum):
-                    picked.append((idx, score))
+            for score_tensor, score_norm, idx in zip(top_vals, top_norm, top_idx):
+                score = float(score_tensor)
+                score_n = float(score_norm)
+                # All provided constraints must pass; unspecified ones are ignored
+                if threshold is not None and score < float(threshold):
+                    continue
+                if margin is not None and score < best - float(margin):
+                    continue
+                if min_similiarity is not None and score < float(min_similiarity):
+                    continue
+                if min_local_similiarity is not None and score_n < float(min_local_similiarity):
+                    continue
+                picked.append((idx, score))
+
+            # If nothing matched constraints, fall back to top-1
             if not picked:
                 picked = [(int(top_idx[0]), float(top_vals[0]))]
+
+            # If explicit top_k is requested, cap the number of picks after filtering
+            if top_k is not None:
+                k = max(0, min(int(top_k), len(picked)))
+                picked = picked[:k] if k > 0 else [(int(top_idx[0]), float(top_vals[0]))]
 
             if show_all_sims:
                 order = torch.argsort(row, descending=True)
             else:
-                order = [
-                    res[0]
-                    for res in sorted(picked, key=lambda pick: pick[1], reverse=True)
-                ]
+                order = [res[0] for res in sorted(picked, key=lambda pick: pick[1], reverse=True)]
 
             row_norm = row_norm[order]
             row = row[order]
-            result.append(
-                [
-                    (
-                        categories[i].id,
-                        self.categories_names[i].removeprefix("passage: ").strip(),
-                        s.item(),
-                        s_norm.item(),
-                    )
-                    for i, s, s_norm in zip(order, row, row_norm)
-                ]
-            )
+            row_list = [
+                (
+                    categories[i].id,
+                    categories[i].name.removeprefix("passage: ").strip(),
+                    s.item(),
+                    s_norm.item(),
+                )
+                for i, s, s_norm in zip(order, row, row_norm)
+            ]
+
+            if return_top_n is not None:
+                row_list = row_list[: max(0, min(return_top_n, len(row_list)))]
+
+            result.append(row_list)
 
         self.sim_results = result
         return result
 
-    def pull_categories(self, categories: list[dict]) -> None:
+    def pull_categories(self, categories: list[Category]) -> None:
         """
         Generate a list of category names without ids from dict list and format
         it for the model.
@@ -139,13 +150,13 @@ class ModelManager:
         result = []
         self.categories_meta = categories
         for cat in categories:
-            name = cat["name"]
-            result.append("passage: " + name)
+            tags = cat.keywords
+            result.append("passage: " + tags)
             # result.append(name)
         self.categories_names = result
-        self.category_embeddings = self.model.encode(
-            self.categories_names, convert_to_tensor=True, normalize_embeddings=True
-        )
+        # self.category_embeddings = self.model.encode(
+        #     self.categories_names, convert_to_tensor=True, normalize_embeddings=True
+        # )
 
     def encode(
         self, data: list[str], prefix: str | None = None, batch_size: int = 32

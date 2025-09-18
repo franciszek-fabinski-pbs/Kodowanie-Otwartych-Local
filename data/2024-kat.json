@@ -1,0 +1,149 @@
+{
+  "categories": [
+    {
+      "id": "1",
+      "name": "praca hybrydowa zdalna w trybie hybrydowym lub zdalnym",
+      "keywords": "hybrydowo zdalnie online"
+    },
+    {
+      "id": "2",
+      "name": "bezpieczne, stabilne zatrudnienie",
+      "keywords": "bezpieczne stabilne zatrudnienie "
+    },
+    {
+      "id": "3",
+      "name": "atmosfera życzliwa i przyjazna",
+      "keywords": "życzliwa mila atmosfera"
+    },
+    {
+      "id": "4",
+      "name": "zespół współpracownicy koledzy",
+      "keywords": "koledzy kolezanki"
+    },
+    {
+      "id": "5",
+      "name": "ciekawe zadania/zakres wykonywanej pracy",
+      "keywords": "zadania ciekawe zakres pracy"
+    },
+    {
+      "id": "6",
+      "name": "mozliwość rozwoju, szkolenia",
+      "keywords": "rozwoj szkolenie"
+    },
+    {
+      "id": "7",
+      "name": "elastyczne godziny pracy",
+      "keywords": "elastyczne godziny"
+    },
+    {
+      "id": "8",
+      "name": "przełożeni kierownictwo zarzad",
+      "keywords": "zarzad przelozeni"
+    },
+    {
+      "id": "9",
+      "name": "rozwojowe i ambitne zadania",
+      "keywords": "ambitne rozwojowe zadania"
+    },
+    {
+      "id": "10",
+      "name": "benefity, działania/wydarzenia propracownicze",
+      "keywords": "benefity dzialania"
+    },
+    {
+      "id": "11",
+      "name": "wynagrodzenie, nagrody, premie",
+      "keywords": "wynagrodzenie pieniadze kasa premia"
+    },
+    {
+      "id": "12",
+      "name": "prestiżowy, społeczny lub patriotyczny",
+      "keywords": "prestiż pomoc polakom"
+    },
+    {
+      "id": "13",
+      "name": "lokalizacja",
+      "keywords": "dojazd lokalizacja"
+    },
+    {
+      "id": "14",
+      "name": "funkcjonalność/warunki miejsca pracy",
+      "keywords": "warunki miejsca pracy"
+    },
+    {
+      "id": "15",
+      "name": "z pracy wszystko ogólne zadowolenie że pracuje",
+      "keywords": "wszystko lubie podoba sie"
+    },
+    {
+      "id": "16",
+      "name": "warunki pracy",
+      "keywords": "warunki pracy"
+    },
+    {
+      "id": "17",
+      "name": "work-life balance, balans miedzy zyciem prywatnym i zawodowym",
+      "keywords": "balans work-life"
+    },
+    {
+      "id": "18",
+      "name": "komunikacja",
+      "keywords": "komunikacja"
+    },
+    {
+      "id": "19",
+      "name": "parking",
+      "keywords": "parking"
+    },
+    {
+      "id": "20",
+      "name": "biblioteka",
+      "keywords": "biblioteka"
+    },
+    {
+      "id": "21",
+      "name": "organizacja pracy",
+      "keywords": "organizacja"
+    },
+    {
+      "id": "22",
+      "name": "terminowe wynagrodzenie",
+      "keywords": "terminowe wynagrodzenie"
+    },
+    {
+      "id": "23",
+      "name": "satysfakcja z wykonywanej pracy",
+      "keywords": "satysfakcja lubie prace"
+    },
+    {
+      "id": "24",
+      "name": "samodzielność wykonywania zadań",
+      "keywords": "samodzielnosc"
+    },
+    {
+      "id": "25",
+      "name": "inne",
+      "keywords": "inne, trudno powiedziec"
+    },
+    {
+      "id": "26",
+      "name": "brak ogólnego zadowolenia",
+      "keywords": "nie jestem nie lubie"
+    },
+    {
+      "id": "27",
+      "name": "udogodnienia gastronomiczno-spożywcze ",
+      "keywords": "jedzenie obiady stolowka"
+    },
+    {
+      "id": "28",
+      "name": "udogodnienia dla rowerzystów",
+      "keywords": "rower rowerzysta"
+    },
+    {
+      "id": "99",
+      "name": "brak odpowiedzi nie wiem",
+      "keywords": "nie wiem trudno powiedziec ... --- -,,,"
+    }
+  ]
+}
