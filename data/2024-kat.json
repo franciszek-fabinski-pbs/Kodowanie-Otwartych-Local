@@ -2,119 +2,148 @@
   "categories": [
     {
       "id": "1",
-      "name": "Możliwość pracy w trybie hybrydowym lub zdalnym"
+      "name": "możliwość pracy w trybie hybrydowym lub zdalnym",
+      "keywords": "hybrydowo zdalnie online"
     },
     {
       "id": "2",
-      "name": "Bezpieczne, stabilne zatrudnienie"
+      "name": "bezpieczne, stabilne zatrudnienie",
+      "keywords": "bezpieczne stabilne zatrudnienie "
     },
     {
       "id": "3",
-      "name": "Życzliwa i przyjazna atmosfera"
+      "name": "życzliwa i przyjazna atmosfera",
+      "keywords": "życzliwa mila atmosfera"
     },
     {
       "id": "4",
-      "name": "Współpracownicy/Współpraca"
+      "name": "zespół współpracownicy koledzy",
+      "keywords": "koledzy kolezanki"
     },
     {
       "id": "5",
-      "name": "Ciekawe zadania/zakres wykonywanej pracy"
+      "name": "ciekawe zadania/zakres wykonywanej pracy",
+      "keywords": "zadania ciekawe zakres pracy"
     },
     {
       "id": "6",
-      "name": "Mozliwość rozwoju, szkolenia"
+      "name": "mozliwość rozwoju, szkolenia",
+      "keywords": "rozwoj szkolenie"
     },
     {
       "id": "7",
-      "name": "Elastyczne godziny pracy"
+      "name": "elastyczne godziny pracy",
+      "keywords": "elastyczne godziny"
     },
     {
       "id": "8",
-      "name": "Przełożeni"
+      "name": "przełożeni",
+      "keywords": "zarzad przelozeni"
     },
     {
       "id": "9",
-      "name": "Rozwojowe i ambitne zadania"
+      "name": "rozwojowe i ambitne zadania",
+      "keywords": "ambitne rozwojowe zadania"
     },
     {
       "id": "10",
-      "name": "Benefity, działania/wydarzenia propracownicze"
+      "name": "benefity, działania/wydarzenia propracownicze",
+      "keywords": "benefity dzialania"
     },
     {
       "id": "11",
-      "name": "Wynagrodzenie, nagrody, premie"
+      "name": "wynagrodzenie, nagrody, premie",
+      "keywords": "wynagrodzenie pieniadze kasa premia"
     },
     {
       "id": "12",
-      "name": "Prestiżowy, społeczny lub patriotyczny charakter pracy"
+      "name": "prestiżowy, społeczny lub patriotyczny charakter pracy",
+      "keywords": "prestiż pomoc polakom"
     },
     {
       "id": "13",
-      "name": "Lokalizacja"
+      "name": "lokalizacja",
+      "keywords": "dojazd lokalizacja"
     },
     {
       "id": "14",
-      "name": "Funkcjonalność/warunki miejsca pracy"
+      "name": "funkcjonalność/warunki miejsca pracy",
+      "keywords": "warunki miejsca pracy"
     },
     {
       "id": "15",
-      "name": "Wszystko / ogólnie pozytywna ocena pracy"
+      "name": "z pracy wszystko ogólne zadowolenie że pracuje",
+      "keywords": "wszystko lubie podoba sie"
     },
     {
       "id": "16",
-      "name": "Warunki pracy"
+      "name": "warunki pracy",
+      "keywords": "warunki pracy"
     },
     {
       "id": "17",
-      "name": "Work-life balance, optymalne obciążenie pracą"
+      "name": "work-life balance, balans miedzy zyciem prywatnym i zawodowym",
+      "keywords": "balans work-life"
     },
     {
       "id": "18",
-      "name": "Komunikacja"
+      "name": "komunikacja",
+      "keywords": "komunikacja"
     },
     {
       "id": "19",
-      "name": "Parking"
+      "name": "parking",
+      "keywords": "parking"
     },
     {
       "id": "20",
-      "name": "Biblioteka"
+      "name": "biblioteka",
+      "keywords": "biblioteka"
     },
     {
       "id": "21",
-      "name": "Organizacja pracy"
+      "name": "organizacja pracy",
+      "keywords": "organizacja"
     },
     {
       "id": "22",
-      "name": "Terminowe wynagrodzenie"
+      "name": "terminowe wynagrodzenie",
+      "keywords": "terminowe wynagrodzenie"
     },
     {
       "id": "23",
-      "name": "Satysfakcja z wykonywanej pracy"
+      "name": "satysfakcja z wykonywanej pracy",
+      "keywords": "satysfakcja lubie prace"
     },
     {
       "id": "24",
-      "name": "Samodzielność wykonywania zadań"
+      "name": "samodzielność wykonywania zadań",
+      "keywords": "samodzielnosc"
     },
     {
       "id": "25",
-      "name": "Inne"
+      "name": "inne",
+      "keywords": "inne, trudno powiedziec"
     },
     {
       "id": "26",
-      "name": "Brak ogólnego zadowolenia"
+      "name": "brak ogólnego zadowolenia",
+      "keywords": "nie jestem nie lubie"
     },
     {
       "id": "27",
-      "name": "Udogodnienia gastronomiczno-spożywcze "
+      "name": "udogodnienia gastronomiczno-spożywcze ",
+      "keywords": "jedzenie obiady stolowka"
     },
     {
       "id": "28",
-      "name": "Udogodnienia dla rowerzystów"
+      "name": "udogodnienia dla rowerzystów",
+      "keywords": "rower rowerzysta"
     },
     {
       "id": "99",
-      "name": "Brak odpowiedzi"
+      "name": "brak odpowiedzi nie wiem",
+      "keywords": "nie wiem trudno powiedziec ... --- -,,,"
     }
   ]
 }

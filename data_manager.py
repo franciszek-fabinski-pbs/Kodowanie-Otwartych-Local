@@ -12,7 +12,7 @@ class CategoryManager:
         categories: list[dict] = [],
     ):
         self.categories: list[Category] = [
-            Category(name=c["name"], id=c["id"]) for c in categories
+            Category(name=c["name"], id=c["id"], keywords=c["keywords"]) for c in categories
         ]
         self.categories_encoded: torch.Tensor = None
         self.cat_names = [c.name for c in self.categories]
