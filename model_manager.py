@@ -1,7 +1,9 @@
-from sentence_transformers import SentenceTransformer, util
-from data_types import Category
-import torch
 import numpy as np
+import torch
+from sentence_transformers import SentenceTransformer
+from sentence_transformers import util
+
+from data_types import Category
 
 
 class ModelManager:

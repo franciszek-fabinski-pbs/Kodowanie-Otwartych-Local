@@ -8,7 +8,7 @@ prawdopodobne przypisanie i entropie zdania (do wykrycia danych-smieci).
 - w `data/categories.json` znajduje sie lista kategorii, 
 - w `data/prompts.json` znajduje sie lista odpowiedzi do klasyfikacji, 
 - w `config.yml` znajduje sie konfiguracja modelu/promptowania
-- folder `logs/` posiada logi w formacie DD.MM.RRRR-hh_mm_ss.log
+- folder `logs/` posiada logi w formacie DD.MM.RRRR-hh:mm:ss.log
 ##### **WAZNE**
 w folderze `models` automatycznie symlinkowane sa
 modele z folderu `$HOME/Modele/` 

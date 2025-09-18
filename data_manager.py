@@ -19,7 +19,6 @@ class CategoryManager:
         self.cat_names = [c.name for c in self.categories]
         self.id_idx_map = {c["id"]: i for i, c in enumerate(categories)}
         self.classification_counter = {c["id"]: 0 for c in categories}
-        print(self.classification_counter)
         self.sims = None
 
     def update_count(self, results):

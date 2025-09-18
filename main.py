@@ -277,7 +277,6 @@ def main():
         print(f"ilosc kat: {len(categories)}")
 
     cat_manager = CategoryManager(categories)
-    # model_manager.pull_categories(categories)
     cat_manager.encode(model_manager.encode)
 
     prompts = None
@@ -365,7 +364,7 @@ def main():
 
         print(f"AI(K={K}): {ai_top_k}")
         for i, cat in enumerate(cat_manager.get_by_id(ai_top_k)):
-            print(f"{i}: {cat.name} --- {results[idx][i]}")
+            print(f"{i}: {cat.name} --- {results[idx][i][2]}")
             cat_manager.classification_counter[str(cat.id)] += 1
         diffs = [
             1
