@@ -1,7 +1,7 @@
 LOGFILE= logs/$(shell date +"%d.%m.%Y-%H_%M_%S").log
 
 run: link
-	@echo "Running the local LLM..."
+	@echo "Running the classification model..."
 	@uv run main.py > $(LOGFILE)
 
 test: link

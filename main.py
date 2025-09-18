@@ -121,7 +121,6 @@ def optimize_classification_params(
     max_iters: int = 12,
 ):
     # Order-insensitive optimization using set overlap (Jaccard-based)
-
     def compute_loss(
         threshold: float, margin: float, min_sim: float, use_n: int | None = None
     ) -> float:
@@ -367,6 +366,7 @@ def main():
         print(f"AI(K={K}): {ai_top_k}")
         for i, cat in enumerate(cat_manager.get_by_id(ai_top_k)):
             print(f"{i}: {cat.name} --- {results[idx][i]}")
+            cat_manager.classification_counter[str(cat.id)] += 1
         diffs = [
             1
             - cat_self_sim[cat_manager.get_index_by_id(h)][
@@ -378,9 +378,14 @@ def main():
         print(f"avg diff over top-{K}: {float(np.mean(diffs[0]))}")
         print("-" * 40)
 
+    cat_manager.classification_counter[str(99)] += len(flagged)
+
     human_len_mean = np.mean(human_len)
     print(f"AI AVERAGE CLASS COUNT: {ai_len_mean}")
     print(f"HUMAN AVERAGE CLASS COUNT: {human_len_mean}")
+    print("Classification counter: ")
+    for k, v in cat_manager.classification_counter.items():
+        print(f"{k}: {v}")
 
     # Second: category self-similarity table for reference (unchanged)
     # model_manager.prompt_model_multi_batch(
