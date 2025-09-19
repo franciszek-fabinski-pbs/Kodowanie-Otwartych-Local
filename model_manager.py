@@ -1,4 +1,3 @@
-import numpy as np
 import torch
 from sentence_transformers import SentenceTransformer
 from sentence_transformers import util
@@ -21,7 +20,7 @@ class ModelManager:
                 name: name of the category
         """
         model_name: str = config["model"]
-        self.model = SentenceTransformer(model_name)
+        self.sentence_transformer = SentenceTransformer(model_name)
         self.device: torch.device | str = config["device"]
         self.categories_meta: list[dict] = None
         self.categories_names: list[str] = None
@@ -29,7 +28,7 @@ class ModelManager:
         self.prompt_embeddings: torch.Tensor = None
         self.sim_results = None
 
-        self.model.to(self.device)
+        self.sentence_transformer.to(self.device)
 
     def prompt_model(self, prompt: str) -> int:
         """
@@ -39,7 +38,7 @@ class ModelManager:
         """
         prompt = prompt
         # prompt = "query: " + prompt
-        prompt_embedding = self.model.encode(
+        prompt_embedding = self.sentence_transformer.encode(
             [prompt], convert_to_tensor=True, normalize_embeddings=True
         )
 
@@ -65,7 +64,7 @@ class ModelManager:
     ) -> list[tuple[int, str, float, float]]:
         q_prompts = [f"query: {intro} {p}" for p in prompts]
 
-        Q = self.model.encode(
+        Q = self.sentence_transformer.encode(
             q_prompts,
             convert_to_tensor=True,
             normalize_embeddings=True,
@@ -104,7 +103,9 @@ class ModelManager:
                     continue
                 if min_similiarity is not None and score < float(min_similiarity):
                     continue
-                if min_local_similiarity is not None and score_n < float(min_local_similiarity):
+                if min_local_similiarity is not None and score_n < float(
+                    min_local_similiarity
+                ):
                     continue
                 picked.append((idx, score))
 
@@ -115,12 +116,17 @@ class ModelManager:
             # If explicit top_k is requested, cap the number of picks after filtering
             if top_k is not None:
                 k = max(0, min(int(top_k), len(picked)))
-                picked = picked[:k] if k > 0 else [(int(top_idx[0]), float(top_vals[0]))]
+                picked = (
+                    picked[:k] if k > 0 else [(int(top_idx[0]), float(top_vals[0]))]
+                )
 
             if show_all_sims:
                 order = torch.argsort(row, descending=True)
             else:
-                order = [res[0] for res in sorted(picked, key=lambda pick: pick[1], reverse=True)]
+                order = [
+                    res[0]
+                    for res in sorted(picked, key=lambda pick: pick[1], reverse=True)
+                ]
 
             row_norm = row_norm[order]
             row = row[order]
@@ -163,7 +169,7 @@ class ModelManager:
     ) -> torch.Tensor:
         if prefix is not None:
             data = [prefix + d for d in data]
-        return self.model.encode(
+        return self.sentence_transformer.encode(
             data,
             convert_to_tensor=True,
             normalize_embeddings=True,
@@ -174,15 +180,3 @@ class ModelManager:
         sims_self = util.cos_sim(self.prompt_embeddings, self.prompt_embeddings)
         return self.sim_results, sims_self
 
-    @staticmethod
-    def calculate_entropy(prompt: str):
-        entropy = 0
-        letters = "".join(set(prompt))
-
-        for i in letters:
-            x = prompt.count(i)
-            y = x = x / len(prompt)
-            x = np.log2(x)
-            x = x * y
-            entropy = entropy + x
-        return -entropy
