@@ -1,8 +1,14 @@
 import torch
+import numpy as np
 from sentence_transformers import SentenceTransformer
+from sentence_transformers import CrossEncoder
 from sentence_transformers import util
+from typing import Literal
 
 from data_types import Category
+
+
+_MODEL_TYPE = Literal["Sentence Transformer", "ReRanker"]
 
 
 class ModelManager:
@@ -15,43 +21,97 @@ class ModelManager:
         config: dictionary with properties:
             device: torch.device, "cuda"/"cpu" etc
             model: model directory path
+            model_type: type of loaded model (currently Sentence Transformer or
+                                              ReRanker)
             categories: array of dicts:
                 id: id of the category
                 name: name of the category
         """
         model_name: str = config["model"]
-        self.sentence_transformer = SentenceTransformer(model_name)
+        self.model: SentenceTransformer | CrossEncoder | None = None
         self.device: torch.device | str = config["device"]
-        self.categories_meta: list[dict] = None
-        self.categories_names: list[str] = None
-        self.category_embeddings: torch.Tensor = None
-        self.prompt_embeddings: torch.Tensor = None
-        self.sim_results = None
+        self.model_type: _MODEL_TYPE = config["model_type"]
+        match self.model_type:
+            case "Sentence Transformer":
+                self.model = SentenceTransformerManager(
+                    model_name,
+                    device=self.device if self.device is not None else "auto",
+                )
+            case "ReRanker":
+                self.model = ReRankerManager(
+                    model_name,
+                    device=self.device if self.device is not None else "auto",
+                )
+            case _:
+                raise Exception("Unknown model type!")
+        self.categories: list[Category] = None
 
-        self.sentence_transformer.to(self.device)
+    def get_results(self):
+        return self._sim_results
 
-    def prompt_model(self, prompt: str) -> int:
+    def pull_categories(self, categories: list[Category]) -> None:
+        match self.model_type:
+            case "Sentence Transformer":
+                self.model.pull_categories(categories, prefix="passage: ")
+            case "ReRanker":
+                self.model.pull_categories(categories)
+            case _:
+                raise Exception("Unknown model type!")
+
+    def classify(self, answers: list[str]) -> list[list[tuple[int, float]]]:
         """
-        Prompt model with an answer/sentence, no special formatting needed.
-
-        Returns index of the most fitting category.
+        Classify a series of answers.
+        Returns a matrix of (category.id, similiarity) tuples.
+        Return structure: result[answer_index][category_index][id, similiarity]
         """
-        prompt = prompt
-        # prompt = "query: " + prompt
-        prompt_embedding = self.sentence_transformer.encode(
-            [prompt], convert_to_tensor=True, normalize_embeddings=True
+        result = self.model.classify(answers)
+        return result
+
+
+class SentenceTransformerManager:
+    def __init__(
+        self,
+        model_name: str,
+        device: torch.device | str,
+        categories: list[Category] | None = None,
+    ):
+        self._prompt_embeddings: torch.Tensor = None
+
+        if categories is not None:
+            self.pull_categories(categories)
+        else:
+            self.categories = None
+            self._category_embeddings = None
+
+        self._device = device
+        self.model = SentenceTransformer(model_name, device=self._device)
+        self.id_idx_map = None
+
+    def pull_categories(
+        self,
+        data: list[Category],
+        prefix: str | None = None,
+        batch_size: int = 32,
+        id_to_index: dict = {},
+    ) -> None:
+        cat_names = None
+        if prefix is not None:
+            cat_names = [prefix + d.name for d in data]
+        else:
+            cat_names = [d.name for d in data]
+        self.categories = data
+        self.id_idx_map = {int(c.id): i for i, c in enumerate(data)}
+        self._category_embeddings = self.model.encode(
+            cat_names,
+            convert_to_tensor=True,
+            normalize_embeddings=True,
+            batch_size=batch_size,
         )
 
-        sims = util.cos_sim(prompt_embedding, self.category_embeddings).squeeze(0)
-        best_idx = int(torch.argmax(sims))
-
-        return best_idx
-
-    def prompt_model_multi_batch(
+    def classify(
         self,
         prompts: list[str],
-        categories: list[Category],
-        categories_encoded: torch.Tensor,
+        categories: list[Category] | None = None,
         threshold: float | None = 0.35,
         margin: float | None = 0.02,
         top_k: int | None = None,
@@ -61,10 +121,14 @@ class ModelManager:
         show_all_sims: bool = False,
         intro: str = "",
         return_top_n: int | None = None,
-    ) -> list[tuple[int, str, float, float]]:
+    ) -> list[list[tuple[int, float]]]:
+        """
+        Classify multiple answers to multiple categories.
+        Returns a matrix of (index, similiarity) tuples (Tensor).
+        """
         q_prompts = [f"query: {intro} {p}" for p in prompts]
 
-        Q = self.sentence_transformer.encode(
+        Q = self.model.encode(
             q_prompts,
             convert_to_tensor=True,
             normalize_embeddings=True,
@@ -72,11 +136,15 @@ class ModelManager:
         )  # shape: (M, d)
         self.prompt_embeddings = Q
 
-        S = util.cos_sim(Q, categories_encoded)
+        if categories is None and self._category_embeddings is None:
+            raise Exception(
+                "No categories to use. To use cached categories, pull them beforehand"
+            )
+        elif categories is not None:
+            self.pull_categories(categories, prefix="passage: ")
+
+        S = util.cos_sim(Q, self._category_embeddings)
         result = []
-        print(
-            f"calling prompt with args: threshold-{threshold}, margin-{margin}, min_similiarity-{min_similiarity}"
-        )
         for m in range(S.size(0)):
             row = S[m]
             s_min = row.min().item()
@@ -84,11 +152,13 @@ class ModelManager:
 
             row_norm = (row - s_min) / (s_max - s_min + 1e-9)
             # Sort all categories by score descending
-            top_idx, top_vals = map(
-                list,
-                zip(*sorted(enumerate(row), key=lambda val: val[1], reverse=True)),
-            )
-            top_norm = row_norm[top_idx]
+            ids = torch.tensor([c.id for c in self.categories], device=row.device)
+
+            vals, order = torch.sort(row, descending=True)
+
+            top_idx = ids[order]
+            top_vals = vals
+            top_norm = row_norm[order]
             best = float(top_vals[0])
 
             # Apply threshold-based selection when top_k is None
@@ -111,7 +181,7 @@ class ModelManager:
 
             # If nothing matched constraints, fall back to top-1
             if not picked:
-                picked = [(int(top_idx[0]), float(top_vals[0]))]
+                picked = torch.Tensor([(int(top_idx[0]), float(top_vals[0]))])
 
             # If explicit top_k is requested, cap the number of picks after filtering
             if top_k is not None:
@@ -124,20 +194,19 @@ class ModelManager:
                 order = torch.argsort(row, descending=True)
             else:
                 order = [
-                    res[0]
+                    torch.as_tensor(res[0], device=self._device)
                     for res in sorted(picked, key=lambda pick: pick[1], reverse=True)
                 ]
+            o = np.array([v.cpu().item() for v in order])
 
-            row_norm = row_norm[order]
-            row = row[order]
+            sel_idx = [self.id_idx_map[cid] for cid in o]
+            row = row[sel_idx]
             row_list = [
                 (
-                    categories[i].id,
-                    categories[i].name.removeprefix("passage: ").strip(),
+                    i,
                     s.item(),
-                    s_norm.item(),
                 )
-                for i, s, s_norm in zip(order, row, row_norm)
+                for i, s in zip(o, row)
             ]
 
             if return_top_n is not None:
@@ -145,38 +214,42 @@ class ModelManager:
 
             result.append(row_list)
 
-        self.sim_results = result
+        self._sim_results = result
         return result
 
-    def pull_categories(self, categories: list[Category]) -> None:
-        """
-        Generate a list of category names without ids from dict list and format
-        it for the model.
-        """
-        result = []
-        self.categories_meta = categories
-        for cat in categories:
-            tags = cat.keywords
-            result.append("passage: " + tags)
-            # result.append(name)
-        self.categories_names = result
-        # self.category_embeddings = self.model.encode(
-        #     self.categories_names, convert_to_tensor=True, normalize_embeddings=True
-        # )
 
-    def encode(
-        self, data: list[str], prefix: str | None = None, batch_size: int = 32
-    ) -> torch.Tensor:
-        if prefix is not None:
-            data = [prefix + d for d in data]
-        return self.sentence_transformer.encode(
-            data,
-            convert_to_tensor=True,
-            normalize_embeddings=True,
-            batch_size=batch_size,
+class ReRankerManager:
+    def __init__(
+        self,
+        model_name: str,
+        device: torch.device | str,
+        categories: list[Category] | None = None,
+    ):
+        self.categories = categories
+        self._device = device
+        self.model = CrossEncoder(
+            model_name,
+            default_activation_function=torch.nn.Identity(),
+            max_length=512,
+            device=self._device,
         )
 
-    def get_results(self):
-        sims_self = util.cos_sim(self.prompt_embeddings, self.prompt_embeddings)
-        return self.sim_results, sims_self
+    def pull_categories(self, categories: list[Category]) -> None:
+        self.categories = categories
 
+    def classify_single(self, answer: str) -> list[tuple[int, float]]:
+        """
+        Classify a single answer to existing categories
+        Returns a list of (id, similiarity) tuples
+        """
+        sim = self.model.predict([[answer, cat.name] for cat in self.categories])
+        result = sorted(
+            zip([c.id for c in self.categories], sim), key=lambda d: d[1], reverse=True
+        )
+        return result
+
+    def classify(self, answers: list[str]) -> list[list[tuple[int, float]]]:
+        result = []
+        for ans in answers:
+            result.append(self.classify_single(ans))
+        return result

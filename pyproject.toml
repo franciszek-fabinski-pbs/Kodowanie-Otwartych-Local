@@ -1,7 +1,7 @@
 [project]
-name = "local-bielik"
+name = "kodowanie-otwartych-local"
 version = "0.1.0"
-description = "Add your description here"
+description = "Kodowanie otwartych za pomoca lokalnych modeli"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

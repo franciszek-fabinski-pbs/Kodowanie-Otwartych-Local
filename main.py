@@ -1,8 +1,7 @@
 import json
-import torch
+import yaml
 
 import numpy as np
-import yaml
 
 from data_manager import CategoryManager
 from data_util import calculate_entropy
@@ -12,7 +11,7 @@ from model_manager import ModelManager
 
 
 def analyze_results(
-    results: torch.Tensor,
+    results: list[list[tuple[int, float]]],
     human_classification,
     cat_manager: CategoryManager,
     kept,
@@ -39,7 +38,7 @@ def analyze_results(
 
         print(f"AI(K={K}): {ai_top_k}")
         for i, cat in enumerate(cat_manager.get_by_id(ai_top_k)):
-            print(f"{i}: {cat.name} --- {results[idx][i][2]}")
+            print(f"{i}: {cat.name} --- {results[idx][i][1]}")
             cat_manager.classification_counter[str(cat.id)] += 1
         print("-" * 40)
 
@@ -74,16 +73,16 @@ def main():
         config = yaml.load(config_file, Loader=yaml.SafeLoader)
 
     cls_cfg = config.get("classification", {})
-    t = float(cls_cfg.get("threshold", 0.003))
-    m = float(cls_cfg.get("margin", 0.025))
-    s = float(cls_cfg.get("min_similiarity", 0.857))
+    # t = float(cls_cfg.get("threshold", 0.003))
+    # m = float(cls_cfg.get("margin", 0.025))
+    # s = float(cls_cfg.get("min_similiarity", 0.857))
 
     prompts, categories = pull_data()
 
     model_manager = ModelManager(config)
     cat_manager = CategoryManager(categories)
 
-    cat_manager.encode(model_manager.encode)
+    model_manager.pull_categories(cat_manager.categories)
 
     # clean out prompts from low entropy answers, put them in flagged category
     thr = 2.5
@@ -99,26 +98,9 @@ def main():
     )
     human_classification = human_classification[kept_idx]
 
-    # --- Final evaluation on full set with best params ---
-    model_manager.prompt_model_multi_batch(
-        kept,
-        cat_manager.categories,
-        cat_manager.categories_encoded,
-        threshold=t,
-        margin=m,
-        min_similiarity=s,
-        show_all_sims=False,
-        top_k=None,
-        **{
-            k: v
-            for k, v in config.get("classification", {}).items()
-            if k in ["batch_size", "intro"]
-        },
-    )
-    results, _ = model_manager.get_results()
+    results = model_manager.classify(kept)
     analyze_results(results, human_classification, cat_manager, kept, flagged)
 
 
 if __name__ == "__main__":
-    # torch.cuda.empty_cache()
     main()

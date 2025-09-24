@@ -1,6 +1,8 @@
 device: cuda
-# model: models/Llama-3.1-8B-Instruct
+model_type: Sentence Transformer
 model: models/multilingual-e5-large
+# model: sdadas/polish-reranker-large-ranknet
+# model_type: ReRanker
 
 classification:
   top_k: 5

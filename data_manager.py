@@ -1,5 +1,3 @@
-from typing import Callable
-
 import numpy as np
 import torch
 
@@ -12,38 +10,27 @@ class CategoryManager:
         categories: list[dict] = [],
     ):
         self.categories: list[Category] = [
-            Category(name=c["name"], id=c["id"], keywords=c["keywords"])
+            Category(name=c["name"], id=int(c["id"]), keywords=c["keywords"])
             for c in categories
         ]
-        self.categories_encoded: torch.Tensor = None
         self.cat_names = [c.name for c in self.categories]
-        self.id_idx_map = {c["id"]: i for i, c in enumerate(categories)}
+        self.id_idx_map = {int(c["id"]): i for i, c in enumerate(categories)}
         self.classification_counter = {c["id"]: 0 for c in categories}
         self.sims = None
 
-    def update_count(self, results):
-        pass
-
     def update_categories(
-        self, categories: list[dict], encoder: Callable | None = None
+        self, categories: list[dict]
     ):
         self.__init__(categories)
-        if encoder is not None:
-            self.encode(encoder)
 
-    def encode(self, encoder: Callable):
-        self.categories_encoded = encoder(
-            [c.name for c in self.categories], prefix="passage: "
-        )
-
-    def get_by_id(self, id: list[int]) -> list[Category]:
+    def get_by_id(self, id: list[int] | int) -> list[Category]:
         arr = np.asarray(id, dtype=float)
         idxs = arr[~np.isnan(arr)].astype(int).tolist()
-        return [self.categories[self.id_idx_map[str(i)]] for i in idxs]
+        return [self.categories[self.id_idx_map[i]] for i in idxs]
 
     def get_index_by_id(self, id: str) -> Category:
         if type(id) is not str:
-            id = str(id)
+            id = id
         return self.id_idx_map[id]
 
     def get_cat_sim(self):
