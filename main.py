@@ -52,15 +52,11 @@ def analyze_results(
         print(f"{k}: {v}")
 
 
-def pull_data():
+def pull_data(input_path: str, input_categories_path: str):
     prompts = None
-    prompts = extract_column_from_csv(
-        "./data/2024-u8.csv", column_idx=1, data_type=str
-    ).tolist()
-    # prompts = extract_column_from_csv(
-    #     "./data/2023-u8.csv", column_idx=1, data_type=str
-    # ).tolist()
-    with open("data/2024-kat.json", "r") as categories_file:
+
+    prompts = extract_column_from_csv(input_path, column_idx=1, data_type=str).tolist()
+    with open(input_categories_path, "r") as categories_file:
         categories = json.load(categories_file)
         categories = categories["categories"]
         print(f"ilosc kat: {len(categories)}")
@@ -77,9 +73,14 @@ def main():
     # m = float(cls_cfg.get("margin", 0.025))
     # s = float(cls_cfg.get("min_similiarity", 0.857))
 
-    prompts, categories = pull_data()
+    data_config = config["data"]
+    prompts, categories = pull_data(
+        input_path=data_config["input_path"],
+        input_categories_path=data_config["input_categories_path"],
+    )
 
-    model_manager = ModelManager(config)
+    model_config = config["model"]
+    model_manager = ModelManager(model_config)
     cat_manager = CategoryManager(categories)
 
     model_manager.pull_categories(cat_manager.categories)

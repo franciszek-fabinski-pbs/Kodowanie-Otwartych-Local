@@ -1,8 +1,16 @@
-device: cuda
-model_type: Sentence Transformer
-model: models/multilingual-e5-large
-# model: sdadas/polish-reranker-large-ranknet
-# model_type: ReRanker
+
+model:
+  device: cuda
+  # model: models/multilingual-e5-large
+  model: sdadas/stella-pl
+  model_type: Sentence Transformer
+  # model: sdadas/polish-reranker-large-ranknet
+  # model_type: ReRanker
+  # instruct: "Instruct: Retrieve semantically similiar text.\nQuery: "
+
+data:
+  input_path: ./input/2024-u8.csv
+  input_categories_path: ./input/2024-kat.json
 
 classification:
   top_k: 5
@@ -11,5 +19,5 @@ classification:
   # min_similiarity: 0.8593293413424838
   threshold: 0.003
   margin: 0.026681898766693756
-  min_similiarity: 0.8553293413424838
+  min_similiarity: 0.6553293413424838
 # 0.003 0.026681898766693756 0.8593293413424838 0.5601961298250365 0.5436690957060312

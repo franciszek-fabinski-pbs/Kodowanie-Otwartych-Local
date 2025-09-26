@@ -45,14 +45,15 @@ class ModelManager:
             case _:
                 raise Exception("Unknown model type!")
         self.categories: list[Category] = None
+        self.instruct: str = config.get("instruct", "")
 
     def get_results(self):
         return self._sim_results
 
-    def pull_categories(self, categories: list[Category]) -> None:
+    def pull_categories(self, categories: list[Category], cat_prefix: str = "") -> None:
         match self.model_type:
             case "Sentence Transformer":
-                self.model.pull_categories(categories, prefix="passage: ")
+                self.model.pull_categories(categories, prefix=self.instruct)
             case "ReRanker":
                 self.model.pull_categories(categories)
             case _:
@@ -64,7 +65,7 @@ class ModelManager:
         Returns a matrix of (category.id, similiarity) tuples.
         Return structure: result[answer_index][category_index][id, similiarity]
         """
-        result = self.model.classify(answers)
+        result = self.model.classify(answers, instruct=self.instruct)
         return result
 
 
@@ -118,15 +119,16 @@ class SentenceTransformerManager:
         batch_size: int = 32,
         min_similiarity: float | None = 0.857,
         min_local_similiarity: float | None = 0.85,
-        show_all_sims: bool = False,
-        intro: str = "",
+        show_all_sims: bool = True,
+        instruct: str = "",
         return_top_n: int | None = None,
+        single_class=False,
     ) -> list[list[tuple[int, float]]]:
         """
         Classify multiple answers to multiple categories.
         Returns a matrix of (index, similiarity) tuples (Tensor).
         """
-        q_prompts = [f"query: {intro} {p}" for p in prompts]
+        q_prompts = [instruct + p for p in prompts]
 
         Q = self.model.encode(
             q_prompts,
@@ -192,6 +194,14 @@ class SentenceTransformerManager:
 
             if show_all_sims:
                 order = torch.argsort(row, descending=True)
+                order = [
+                    torch.as_tensor(res[0], device=self._device)
+                    for res in sorted(
+                        [(id, val) for (id, val) in list(zip(top_idx, top_vals))],
+                        key=lambda pick: pick[1],
+                        reverse=True,
+                    )
+                ]
             else:
                 order = [
                     torch.as_tensor(res[0], device=self._device)
@@ -248,8 +258,10 @@ class ReRankerManager:
         )
         return result
 
-    def classify(self, answers: list[str]) -> list[list[tuple[int, float]]]:
+    def classify(
+        self, answers: list[str], instruct: str = ""
+    ) -> list[list[tuple[int, float]]]:
         result = []
         for ans in answers:
-            result.append(self.classify_single(ans))
+            result.append(self.classify_single(instruct + ans))
         return result
